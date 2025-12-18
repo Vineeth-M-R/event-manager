@@ -1,35 +1,205 @@
+import { useState } from 'react'
 import './App.css'
+import { supabase } from './supabaseClient'
+import { openCalendarLink } from './calendarUtils'
 
 function App() {
+  const [dateValue, setDateValue] = useState('')
+  const [dateError, setDateError] = useState('')
+  const [formData, setFormData] = useState({
+    activityType: '',
+    hostDetails: '',
+    participantsCount: '',
+    perPersonCharge: '',
+    venue: '',
+    time: '',
+    additionalNotes: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' })
+  const [showResponses, setShowResponses] = useState(false)
+  const [previousEvents, setPreviousEvents] = useState([])
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false)
+
+  const handleDateChange = (e) => {
+    let value = e.target.value.replace(/[^\d]/g, '') // Remove non-digits
+
+    if (value.length >= 2) {
+      const day = value.slice(0, 2)
+      const month = value.slice(2, 4)
+
+      // Validate day (01-31)
+      if (parseInt(day) < 1 || parseInt(day) > 31) {
+        setDateError('Day must be between 01 and 31')
+        return
+      }
+
+      // Validate month if entered (01-12)
+      if (month && (parseInt(month) < 1 || parseInt(month) > 12)) {
+        setDateError('Month must be between 01 and 12')
+        return
+      }
+
+      // Format with slash
+      value = day + (month ? '/' + month : '')
+    }
+
+    setDateError('')
+    setDateValue(value)
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    // Validate required fields
+    if (!formData.activityType || !dateValue || !formData.time) {
+      setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' })
+      return
+    }
+
+    if (dateError) {
+      setSubmitMessage({ type: 'error', text: 'Please fix the date error before submitting' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitMessage({ type: '', text: '' })
+
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .insert([
+          {
+            activity_type: formData.activityType,
+            host_details: formData.hostDetails,
+            participants_count: formData.participantsCount ? parseInt(formData.participantsCount) : null,
+            per_person_charge: formData.perPersonCharge ? parseFloat(formData.perPersonCharge) : null,
+            venue: formData.venue,
+            event_date: dateValue,
+            event_time: formData.time,
+            additional_notes: formData.additionalNotes
+          }
+        ])
+
+      if (error) throw error
+
+      setSubmitMessage({ type: 'success', text: 'Event saved successfully in database' })
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setSubmitMessage({ type: '', text: '' })
+      }, 3000)
+
+      // Open Google Calendar with event details
+      openCalendarLink({
+        activity_type: formData.activityType,
+        host_details: formData.hostDetails,
+        participants_count: formData.participantsCount,
+        per_person_charge: formData.perPersonCharge,
+        venue: formData.venue,
+        event_date: dateValue,
+        event_time: formData.time,
+        additional_notes: formData.additionalNotes
+      })
+
+      // Reset form
+      setFormData({
+        activityType: '',
+        hostDetails: '',
+        participantsCount: '',
+        perPersonCharge: '',
+        venue: '',
+        time: '',
+        additionalNotes: ''
+      })
+      setDateValue('')
+
+    } catch (error) {
+      console.error('Error saving event:', error)
+      setSubmitMessage({ type: 'error', text: `Error: ${error.message}` })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const fetchPreviousEvents = async () => {
+    setIsLoadingEvents(true)
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setPreviousEvents(data || [])
+      setShowResponses(true)
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      setSubmitMessage({ type: 'error', text: `Error loading events: ${error.message}` })
+    } finally {
+      setIsLoadingEvents(false)
+    }
+  }
+
+  const closeResponsesModal = () => {
+    setShowResponses(false)
+  }
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1 className="app-title">Welcome Pranathee</h1>
-        <p className="app-subtitle">
-          Capture all the key details for your upcoming Art workshop.
-        </p>
+        <div>
+          <h1 className="app-title">Welcome Pranathee</h1>
+          <p className="app-subtitle">
+            Capture all the key details for your upcoming Art workshop.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost view-responses-btn"
+          onClick={fetchPreviousEvents}
+          disabled={isLoadingEvents}
+        >
+          {isLoadingEvents ? 'Loading...' : 'View Responses'}
+        </button>
       </header>
 
       <main className="form-card">
-        <form className="event-form">
+        <form className="event-form" onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="form-field">
               <label htmlFor="workshopType">Activity Type</label>
-              <input
+              <select
                 id="workshopType"
-                name="workshopType"
-                type="text"
-                placeholder="e.g. React Bootcamp, Design Sprint"
-              />
+                name="activityType"
+                value={formData.activityType}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select an activity</option>
+                <option value="onesie">Onesie</option>
+                <option value="fluid-art">Fluid Art</option>
+                <option value="canvas">Canvas</option>
+              </select>
             </div>
 
             <div className="form-field">
               <label htmlFor="workshopPoc">Host Details</label>
               <input
                 id="workshopPoc"
-                name="workshopPoc"
+                name="hostDetails"
                 type="text"
                 placeholder="Point of contact name"
+                value={formData.hostDetails}
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -44,6 +214,8 @@ function App() {
                 min="1"
                 step="1"
                 placeholder="e.g. 20"
+                value={formData.participantsCount}
+                onChange={handleInputChange}
               />
             </div>
 
@@ -58,6 +230,8 @@ function App() {
                   min="0"
                   step="100"
                   placeholder="2500"
+                  value={formData.perPersonCharge}
+                  onChange={handleInputChange}
                 />
               </div>
             </div>
@@ -66,9 +240,11 @@ function App() {
               <label htmlFor="workshopPlace">Venue</label>
               <input
                 id="workshopPlace"
-                name="workshopPlace"
+                name="venue"
                 type="text"
-                placeholder="Venue name or meeting link"
+                placeholder="Venue name"
+                value={formData.venue}
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -76,12 +252,28 @@ function App() {
           <div className="form-row">
             <div className="form-field">
               <label htmlFor="workshopDate">Date</label>
-              <input id="workshopDate" name="workshopDate" type="date" />
+              <input
+                id="workshopDate"
+                name="workshopDate"
+                type="text"
+                placeholder="DD/MM"
+                maxLength="5"
+                value={dateValue}
+                onChange={handleDateChange}
+              />
+              {dateError && <span className="field-error">{dateError}</span>}
             </div>
 
             <div className="form-field">
               <label htmlFor="workshopTime">Time</label>
-              <input id="workshopTime" name="workshopTime" type="time" />
+              <input
+                id="workshopTime"
+                name="time"
+                type="time"
+                value={formData.time}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
 
@@ -89,19 +281,72 @@ function App() {
             <label htmlFor="workshopNotes">Additional notes</label>
             <textarea
               id="workshopNotes"
-              name="workshopNotes"
+              name="additionalNotes"
               rows="3"
               placeholder="Add any additional details"
+              value={formData.additionalNotes}
+              onChange={handleInputChange}
             />
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              Confirm
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Add to calendar'}
             </button>
+            {submitMessage.text && (
+              <div className={`submit-message ${submitMessage.type}`}>
+                {submitMessage.text}
+              </div>
+            )}
           </div>
         </form>
       </main>
+
+      {/* Responses Modal */}
+      {showResponses && (
+        <div className="modal-overlay" onClick={closeResponsesModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Previous Responses</h2>
+              <button className="modal-close" onClick={closeResponsesModal}>×</button>
+            </div>
+            <div className="modal-body">
+              {previousEvents.length === 0 ? (
+                <p className="no-events">No events found</p>
+              ) : (
+                <div className="table-container">
+                  <table className="events-table">
+                    <thead>
+                      <tr>
+                        <th>Activity Type</th>
+                        <th>Host</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Venue</th>
+                        <th>Participants</th>
+                        <th>Charge</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previousEvents.map((event) => (
+                        <tr key={event.id}>
+                          <td>{event.activity_type}</td>
+                          <td>{event.host_details || '-'}</td>
+                          <td>{event.event_date}</td>
+                          <td>{event.event_time}</td>
+                          <td>{event.venue || '-'}</td>
+                          <td>{event.participants_count || '-'}</td>
+                          <td>{event.per_person_charge ? `₹${event.per_person_charge}` : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
