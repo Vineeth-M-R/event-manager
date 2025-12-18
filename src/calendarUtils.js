@@ -84,10 +84,40 @@ export function generateCalendarLink(eventData) {
 }
 
 /**
+ * Detect if user is on a mobile device
+ */
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+/**
  * Open Google Calendar with pre-filled event data
+ * Uses native app URL scheme for mobile, web deep link for desktop
  * @param {Object} eventData - Event details from form
  */
 export function openCalendarLink(eventData) {
-    const calendarUrl = generateCalendarLink(eventData)
-    window.open(calendarUrl, '_blank')
+    const webCalendarUrl = generateCalendarLink(eventData)
+
+    if (isMobileDevice()) {
+        // For mobile devices, try to open Google Calendar app
+        // iOS: googlecalendar://
+        // Android: content://com.android.calendar/
+
+        // Convert web URL to app URL scheme
+        const appUrl = webCalendarUrl.replace(
+            'https://calendar.google.com/calendar/render',
+            'googlecalendar://www.google.com/calendar/event'
+        )
+
+        // Try to open the native app
+        window.location.href = appUrl
+
+        // Fallback to web version if app doesn't open (after 2 seconds)
+        setTimeout(() => {
+            window.open(webCalendarUrl, '_blank')
+        }, 2000)
+    } else {
+        // For desktop, open web version directly
+        window.open(webCalendarUrl, '_blank')
+    }
 }
