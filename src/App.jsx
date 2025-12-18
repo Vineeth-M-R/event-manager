@@ -188,6 +188,8 @@ function App() {
                 <option value="onesie">Onesie</option>
                 <option value="fluid-art">Fluid Art</option>
                 <option value="canvas">Canvas</option>
+                <option value="mosaic">Mosaic</option>
+                <option value="photo-frame">Photo Frame</option>
               </select>
             </div>
 
@@ -229,7 +231,7 @@ function App() {
                   type="number"
                   min="0"
                   step="100"
-                  placeholder="2500"
+                  placeholder="1000"
                   value={formData.perPersonCharge}
                   onChange={handleInputChange}
                 />
