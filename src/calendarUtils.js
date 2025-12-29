@@ -35,7 +35,7 @@ export function generateCalendarLink(eventData) {
 
     // Create date object in IST (UTC+5:30)
     // Note: JavaScript Date months are 0-indexed
-    const istDate = new Date(2025, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
 
     // Convert to UTC by subtracting IST offset (5 hours 30 minutes = 330 minutes)
     const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000))
@@ -114,7 +114,7 @@ function generateICSFile(eventData) {
     const [hours, minutes] = event_time.split(':')
 
     // Create date object in IST
-    const istDate = new Date(2025, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
 
     // Convert to UTC
     const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000))
