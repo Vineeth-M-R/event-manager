@@ -139,7 +139,29 @@ function App() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setPreviousEvents(data || [])
+      
+      // Filter to show only future dates
+      const currentDate = new Date()
+      const currentYear = 2026 // Using the current year
+      
+      const futureEvents = (data || []).filter(event => {
+        if (!event.event_date) return false
+        
+        // Parse DD/MM format
+        const [day, month] = event.event_date.split('/').map(num => parseInt(num, 10))
+        
+        if (!day || !month) return false
+        
+        // Create date object for the event (assuming current year)
+        const eventDate = new Date(currentYear, month - 1, day)
+        
+        // Compare with current date (ignoring time)
+        const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+        
+        return eventDate >= today
+      })
+      
+      setPreviousEvents(futureEvents)
       setShowResponses(true)
     } catch (error) {
       console.error('Error fetching events:', error)
