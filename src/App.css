@@ -19,7 +19,7 @@ body {
 
 #root {
   min-height: 100vh;
-  padding: 2rem 1.5rem;
+  padding: 1rem;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -29,6 +29,16 @@ body {
 .app {
   width: 100%;
   max-width: 680px;
+}
+
+@media (max-width: 640px) {
+  #root {
+    padding: 0.5rem;
+  }
+
+  .app {
+    max-width: 100%;
+  }
 }
 
 /* Header */
@@ -498,16 +508,17 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  #root {
-    padding: 1.5rem 1rem;
-  }
-
   .app-title {
     font-size: 2rem;
   }
 
   .form-card {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  .revenue-summary {
+    padding: 1.5rem 1rem;
   }
 
   .revenue-amount {
@@ -528,7 +539,16 @@ body {
 
   .events-table th,
   .events-table td {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .form-row {
+    gap: 1rem;
+  }
+
+  .form-section {
+    margin-bottom: 1.5rem;
   }
 }
 
