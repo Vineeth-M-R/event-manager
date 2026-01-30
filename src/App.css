@@ -513,6 +513,18 @@ body {
   border-bottom: none;
 }
 
+.events-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.events-table tbody tr:hover {
+  background-color: #F3F4F6;
+}
+
+.events-table tbody tr[style*="cursor: pointer"]:hover {
+  background-color: #EEF2FF;
+}
+
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .app-header {

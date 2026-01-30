@@ -3,6 +3,20 @@ import './App.css'
 import { supabase } from './supabaseClient'
 import { openCalendarLink } from './calendarUtils'
 
+// Material costs per activity type
+const MATERIAL_COSTS = {
+  'onesie-branded': 257,
+  'onesie-generic': 180,
+  'fluid-art': 282,
+  'canvas-regular': 150,
+  'canvas-kit': 200,
+  'mosaic-article': 490,
+  'mosaic-serving-tray': 835,
+  'mosaic-coasters': 625,
+  'mosaic-shapes': 350,
+  'photo-frame': 300
+}
+
 function App() {
   const [dateValue, setDateValue] = useState('')
   const [dateError, setDateError] = useState('')
@@ -20,30 +34,44 @@ function App() {
   const [showResponses, setShowResponses] = useState(false)
   const [previousEvents, setPreviousEvents] = useState([])
   const [isLoadingEvents, setIsLoadingEvents] = useState(false)
-  const [revenueInputs, setRevenueInputs] = useState({})
-  const [savedRevenue, setSavedRevenue] = useState({})
-  const [totalRevenue, setTotalRevenue] = useState(0)
 
-  // Fetch total revenue on component mount
+  const [totalRevenue, setTotalRevenue] = useState(0)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [showEventDetails, setShowEventDetails] = useState(false)
+  const [eventDetailsForm, setEventDetailsForm] = useState({
+    participants: '',
+    moneyCollected: ''
+  })
+
+  // Fetch total profit on component mount
   useEffect(() => {
     fetchTotalRevenue()
   }, [])
 
+  // Fetch total profit (revenue - material costs)
   const fetchTotalRevenue = async () => {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('revenue')
+        .select('revenue, participants_count, activity_type')
 
       if (error) throw error
 
       const total = (data || []).reduce((sum, event) => {
-        return sum + (event.revenue || 0)
+        // Only calculate profit if revenue has been set (event has been edited)
+        if (!event.revenue) {
+          return sum // Return 0 profit for events without revenue data
+        }
+        const revenue = event.revenue
+        const participants = event.participants_count || 0
+        const materialCost = MATERIAL_COSTS[event.activity_type] || 0
+        const profit = revenue - (participants * materialCost)
+        return sum + profit
       }, 0)
 
       setTotalRevenue(total)
     } catch (error) {
-      console.error('Error fetching total revenue:', error)
+      console.error('Error fetching total profit:', error)
     }
   }
 
@@ -163,19 +191,21 @@ function App() {
       const { data, error } = await supabase
         .from('events')
         .select('*')
-        .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      setPreviousEvents(data || [])
+      // Sort by event_date (DD/MM format) - latest dates first
+      const sortedData = (data || []).sort((a, b) => {
+        const parseDate = (dateStr) => {
+          if (!dateStr) return new Date(0)
+          const [day, month] = dateStr.split('/').map(Number)
+          // Assuming current year 2026
+          return new Date(2026, month - 1, day)
+        }
+        return parseDate(b.event_date) - parseDate(a.event_date)
+      })
 
-      // Initialize revenue inputs from database
-      const initialRevenue = {}
-        ; (data || []).forEach(event => {
-          initialRevenue[event.id] = event.revenue || ''
-        })
-      setRevenueInputs(initialRevenue)
-
+      setPreviousEvents(sortedData)
       setShowResponses(true)
     } catch (error) {
       console.error('Error fetching events:', error)
@@ -185,41 +215,54 @@ function App() {
     }
   }
 
-  const handleRevenueChange = (eventId, value) => {
-    setRevenueInputs(prev => ({
+  const closeResponsesModal = () => {
+    setShowResponses(false)
+  }
+
+  const openEventDetails = (event) => {
+    setSelectedEvent(event)
+    setEventDetailsForm({
+      participants: event.participants_count || '',
+      moneyCollected: event.revenue || ''
+    })
+    setShowEventDetails(true)
+  }
+
+  const closeEventDetails = () => {
+    setShowEventDetails(false)
+    setSelectedEvent(null)
+  }
+
+  const handleEventDetailsChange = (e) => {
+    const { name, value } = e.target
+    setEventDetailsForm(prev => ({
       ...prev,
-      [eventId]: value
+      [name]: value
     }))
   }
 
-  const saveRevenue = async (eventId) => {
+  const saveEventDetails = async (e) => {
+    e.preventDefault()
     try {
-      const revenue = revenueInputs[eventId]
       const { error } = await supabase
         .from('events')
-        .update({ revenue: revenue ? parseFloat(revenue) : null })
-        .eq('id', eventId)
+        .update({
+          participants_count: eventDetailsForm.participants ? parseInt(eventDetailsForm.participants) : null,
+          revenue: eventDetailsForm.moneyCollected ? parseFloat(eventDetailsForm.moneyCollected) : null
+        })
+        .eq('id', selectedEvent.id)
 
       if (error) throw error
 
-      // Show success state on the button
-      setSavedRevenue(prev => ({ ...prev, [eventId]: true }))
+      // Refresh the events list and total revenue
+      await fetchPreviousEvents()
+      await fetchTotalRevenue()
 
-      // Refresh total revenue
-      fetchTotalRevenue()
-
-      // Reset success state after 2 seconds
-      setTimeout(() => {
-        setSavedRevenue(prev => ({ ...prev, [eventId]: false }))
-      }, 2000)
+      closeEventDetails()
     } catch (error) {
-      console.error('Error saving revenue:', error)
-      alert(`Error saving revenue: ${error.message}`)
+      console.error('Error saving event details:', error)
+      alert(`Error saving details: ${error.message}`)
     }
-  }
-
-  const closeResponsesModal = () => {
-    setShowResponses(false)
   }
 
   return (
@@ -232,14 +275,14 @@ function App() {
           onClick={fetchPreviousEvents}
           disabled={isLoadingEvents}
         >
-          {isLoadingEvents ? 'Loading...' : 'View Responses'}
+          {isLoadingEvents ? 'Loading...' : 'View Events'}
         </button>
       </header>
 
       <main className="form-card">
-        {/* Revenue Summary */}
+        {/* Profit Summary */}
         <div className="revenue-summary">
-          <div className="revenue-label">Total Revenue Earned</div>
+          <div className="revenue-label">Total Profit</div>
           <div className="revenue-amount">₹{totalRevenue.toLocaleString('en-IN')}</div>
         </div>
 
@@ -257,10 +300,15 @@ function App() {
                   required
                 >
                   <option value="">Select an activity</option>
-                  <option value="onesie">Onesie</option>
+                  <option value="onesie-branded">Onesie Branded</option>
+                  <option value="onesie-generic">Onesie Generic</option>
                   <option value="fluid-art">Fluid Art</option>
-                  <option value="canvas">Canvas</option>
-                  <option value="mosaic">Mosaic</option>
+                  <option value="canvas-regular">Canvas Regular</option>
+                  <option value="canvas-kit">Canvas Kit</option>
+                  <option value="mosaic-article">Mosaic Article</option>
+                  <option value="mosaic-serving-tray">Mosaic Serving Tray</option>
+                  <option value="mosaic-coasters">Mosaic Coasters</option>
+                  <option value="mosaic-shapes">Mosaic Shapes</option>
                   <option value="photo-frame">Photo Frame</option>
                 </select>
               </div>
@@ -403,45 +451,117 @@ function App() {
                         <th>Host</th>
                         <th>Date</th>
                         <th>Venue</th>
-                        <th>Revenue</th>
+                        <th>Profit</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {previousEvents.map((event) => (
-                        <tr key={event.id}>
-                          <td>{event.activity_type}</td>
-                          <td>{event.host_details || '-'}</td>
-                          <td>{event.event_date}</td>
-                          <td>{event.venue || '-'}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <div className="input-with-prefix" style={{ flex: 1 }}>
-                                <span className="input-prefix">₹</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="100"
-                                  placeholder="0"
-                                  value={revenueInputs[event.id] || ''}
-                                  onChange={(e) => handleRevenueChange(event.id, e.target.value)}
-                                  style={{ width: '100%' }}
-                                />
-                              </div>
-                              <button
-                                className={`btn ${savedRevenue[event.id] ? 'btn-success' : 'btn-primary'}`}
-                                onClick={() => saveRevenue(event.id)}
-                                style={{ padding: '6px 12px', fontSize: '14px', minWidth: '70px' }}
-                              >
-                                {savedRevenue[event.id] ? '✓ Saved' : 'Save'}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      {previousEvents.map((event) => {
+                        // Show 0 profit for events without revenue data
+                        let profit = 0
+                        if (event.revenue) {
+                          const revenue = event.revenue
+                          const participants = event.participants_count || 0
+                          const materialCost = MATERIAL_COSTS[event.activity_type] || 0
+                          profit = revenue - (participants * materialCost)
+                        }
+
+                        return (
+                          <tr
+                            key={event.id}
+                            onClick={() => openEventDetails(event)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td>{event.activity_type}</td>
+                            <td>{event.host_details || '-'}</td>
+                            <td>{event.event_date}</td>
+                            <td>{event.venue || '-'}</td>
+                            <td style={{ fontWeight: '600', color: profit >= 0 ? '#059669' : '#DC2626' }}>
+                              ₹{profit.toLocaleString('en-IN')}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event Details Modal */}
+      {showEventDetails && selectedEvent && (
+        <div className="modal-overlay" onClick={closeEventDetails}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2>Event Details</h2>
+              <button className="modal-close" onClick={closeEventDetails}>×</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={saveEventDetails}>
+                <div className="form-section">
+                  <div className="form-field">
+                    <label htmlFor="participants">Number of participants</label>
+                    <input
+                      id="participants"
+                      name="participants"
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder={selectedEvent.participants_count || 'e.g. 20'}
+                      value={eventDetailsForm.participants}
+                      onChange={handleEventDetailsChange}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label htmlFor="moneyCollected">Money collected</label>
+                    <div className="input-with-prefix">
+                      <span className="input-prefix">₹</span>
+                      <input
+                        id="moneyCollected"
+                        name="moneyCollected"
+                        type="number"
+                        min="0"
+                        step="100"
+                        placeholder="0"
+                        value={eventDetailsForm.moneyCollected}
+                        onChange={handleEventDetailsChange}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Profit Calculation Display */}
+                  {eventDetailsForm.participants && eventDetailsForm.moneyCollected && selectedEvent.activity_type && (
+                    <div className="form-field">
+                      <label>Calculated Profit</label>
+                      <div style={{
+                        padding: '1rem',
+                        background: '#EEF2FF',
+                        borderRadius: '8px',
+                        fontSize: '1.25rem',
+                        fontWeight: '600',
+                        color: '#1E3A8A'
+                      }}>
+                        ₹{(
+                          parseFloat(eventDetailsForm.moneyCollected) -
+                          (parseInt(eventDetailsForm.participants) * (MATERIAL_COSTS[selectedEvent.activity_type] || 0))
+                        ).toLocaleString('en-IN')}
+                      </div>
+                      <span className="helper-text">
+                        Money Collected - (Participants × Material Cost of ₹{MATERIAL_COSTS[selectedEvent.activity_type] || 0})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-actions">
+                  <button type="submit" className="btn btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
