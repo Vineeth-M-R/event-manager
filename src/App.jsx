@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { supabase } from './supabaseClient'
 import { openCalendarLink } from './calendarUtils'
@@ -20,6 +20,33 @@ function App() {
   const [showResponses, setShowResponses] = useState(false)
   const [previousEvents, setPreviousEvents] = useState([])
   const [isLoadingEvents, setIsLoadingEvents] = useState(false)
+  const [revenueInputs, setRevenueInputs] = useState({})
+  const [savedRevenue, setSavedRevenue] = useState({})
+  const [totalRevenue, setTotalRevenue] = useState(0)
+
+  // Fetch total revenue on component mount
+  useEffect(() => {
+    fetchTotalRevenue()
+  }, [])
+
+  const fetchTotalRevenue = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('revenue')
+
+      if (error) throw error
+
+      const total = (data || []).reduce((sum, event) => {
+        return sum + (event.revenue || 0)
+      }, 0)
+
+      setTotalRevenue(total)
+    } catch (error) {
+      console.error('Error fetching total revenue:', error)
+    }
+  }
+
 
   const handleDateChange = (e) => {
     let value = e.target.value.replace(/[^\d]/g, '') // Remove non-digits
@@ -139,35 +166,55 @@ function App() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      
-      // Filter to show only future dates
-      const currentDate = new Date()
-      const currentYear = 2026 // Using the current year
-      
-      const futureEvents = (data || []).filter(event => {
-        if (!event.event_date) return false
-        
-        // Parse DD/MM format
-        const [day, month] = event.event_date.split('/').map(num => parseInt(num, 10))
-        
-        if (!day || !month) return false
-        
-        // Create date object for the event (assuming current year)
-        const eventDate = new Date(currentYear, month - 1, day)
-        
-        // Compare with current date (ignoring time)
-        const today = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
-        
-        return eventDate >= today
-      })
-      
-      setPreviousEvents(futureEvents)
+
+      setPreviousEvents(data || [])
+
+      // Initialize revenue inputs from database
+      const initialRevenue = {}
+        ; (data || []).forEach(event => {
+          initialRevenue[event.id] = event.revenue || ''
+        })
+      setRevenueInputs(initialRevenue)
+
       setShowResponses(true)
     } catch (error) {
       console.error('Error fetching events:', error)
       setSubmitMessage({ type: 'error', text: `Error loading events: ${error.message}` })
     } finally {
       setIsLoadingEvents(false)
+    }
+  }
+
+  const handleRevenueChange = (eventId, value) => {
+    setRevenueInputs(prev => ({
+      ...prev,
+      [eventId]: value
+    }))
+  }
+
+  const saveRevenue = async (eventId) => {
+    try {
+      const revenue = revenueInputs[eventId]
+      const { error } = await supabase
+        .from('events')
+        .update({ revenue: revenue ? parseFloat(revenue) : null })
+        .eq('id', eventId)
+
+      if (error) throw error
+
+      // Show success state on the button
+      setSavedRevenue(prev => ({ ...prev, [eventId]: true }))
+
+      // Refresh total revenue
+      fetchTotalRevenue()
+
+      // Reset success state after 2 seconds
+      setTimeout(() => {
+        setSavedRevenue(prev => ({ ...prev, [eventId]: false }))
+      }, 2000)
+    } catch (error) {
+      console.error('Error saving revenue:', error)
+      alert(`Error saving revenue: ${error.message}`)
     }
   }
 
@@ -178,15 +225,10 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div>
-          <h1 className="app-title">Welcome Pranathee</h1>
-          <p className="app-subtitle">
-            Capture all the key details for your upcoming Art workshop.
-          </p>
-        </div>
+        <h1 className="app-title">Welcome Pranathee</h1>
         <button
           type="button"
-          className="btn btn-ghost view-responses-btn"
+          className="view-responses-btn"
           onClick={fetchPreviousEvents}
           disabled={isLoadingEvents}
         >
@@ -195,67 +237,71 @@ function App() {
       </header>
 
       <main className="form-card">
+        {/* Revenue Summary */}
+        <div className="revenue-summary">
+          <div className="revenue-label">Total Revenue Earned</div>
+          <div className="revenue-amount">₹{totalRevenue.toLocaleString('en-IN')}</div>
+        </div>
+
         <form className="event-form" onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="workshopType">Activity Type</label>
-              <select
-                id="workshopType"
-                name="activityType"
-                value={formData.activityType}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Select an activity</option>
-                <option value="onesie">Onesie</option>
-                <option value="fluid-art">Fluid Art</option>
-                <option value="canvas">Canvas</option>
-                <option value="mosaic">Mosaic</option>
-                <option value="photo-frame">Photo Frame</option>
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="workshopPoc">Host Details</label>
-              <input
-                id="workshopPoc"
-                name="hostDetails"
-                type="text"
-                placeholder="Point of contact name"
-                value={formData.hostDetails}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="participantsCount">Number of participants</label>
-              <input
-                id="participantsCount"
-                name="participantsCount"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="e.g. 20"
-                value={formData.participantsCount}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="form-field">
-              <label htmlFor="perPersonCharge">Per person charge</label>
-              <div className="input-with-prefix">
-                <span className="input-prefix">₹</span>
-                <input
-                  id="perPersonCharge"
-                  name="perPersonCharge"
-                  type="number"
-                  min="0"
-                  step="100"
-                  placeholder="1000"
-                  value={formData.perPersonCharge}
+          {/* Workshop Details Section */}
+          <div className="form-section">
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="workshopType">Activity Type</label>
+                <select
+                  id="workshopType"
+                  name="activityType"
+                  value={formData.activityType}
                   onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select an activity</option>
+                  <option value="onesie">Onesie</option>
+                  <option value="fluid-art">Fluid Art</option>
+                  <option value="canvas">Canvas</option>
+                  <option value="mosaic">Mosaic</option>
+                  <option value="photo-frame">Photo Frame</option>
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="workshopPoc">Host Details</label>
+                <input
+                  id="workshopPoc"
+                  name="hostDetails"
+                  type="text"
+                  placeholder="Point of contact name"
+                  value={formData.hostDetails}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="workshopDate">Date</label>
+                <input
+                  id="workshopDate"
+                  name="workshopDate"
+                  type="text"
+                  placeholder="DD/MM"
+                  maxLength="5"
+                  value={dateValue}
+                  onChange={handleDateChange}
+                />
+                {dateError && <span className="field-error">{dateError}</span>}
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="workshopTime">Time</label>
+                <input
+                  id="workshopTime"
+                  name="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  required
                 />
               </div>
             </div>
@@ -273,44 +319,55 @@ function App() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-field">
-              <label htmlFor="workshopDate">Date</label>
-              <input
-                id="workshopDate"
-                name="workshopDate"
-                type="text"
-                placeholder="DD/MM"
-                maxLength="5"
-                value={dateValue}
-                onChange={handleDateChange}
-              />
-              {dateError && <span className="field-error">{dateError}</span>}
-            </div>
+          {/* Participants & Pricing Section */}
+          <div className="form-section">
+            <div className="form-row">
+              <div className="form-field">
+                <label htmlFor="participantsCount">Number of participants</label>
+                <input
+                  id="participantsCount"
+                  name="participantsCount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 20"
+                  value={formData.participantsCount}
+                  onChange={handleInputChange}
+                />
+              </div>
 
-            <div className="form-field">
-              <label htmlFor="workshopTime">Time</label>
-              <input
-                id="workshopTime"
-                name="time"
-                type="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                required
-              />
+              <div className="form-field">
+                <label htmlFor="perPersonCharge">Per person charge</label>
+                <div className="input-with-prefix">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    id="perPersonCharge"
+                    name="perPersonCharge"
+                    type="number"
+                    min="0"
+                    step="100"
+                    placeholder="1000"
+                    value={formData.perPersonCharge}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="form-field">
-            <label htmlFor="workshopNotes">Additional notes</label>
-            <textarea
-              id="workshopNotes"
-              name="additionalNotes"
-              rows="3"
-              placeholder="Add any additional details"
-              value={formData.additionalNotes}
-              onChange={handleInputChange}
-            />
+          {/* Notes Section */}
+          <div className="form-section">
+            <div className="form-field">
+              <label htmlFor="workshopNotes">Additional notes</label>
+              <textarea
+                id="workshopNotes"
+                name="additionalNotes"
+                rows="3"
+                placeholder="Add any additional details"
+                value={formData.additionalNotes}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
 
           <div className="form-actions">
@@ -345,10 +402,8 @@ function App() {
                         <th>Activity Type</th>
                         <th>Host</th>
                         <th>Date</th>
-                        <th>Time</th>
                         <th>Venue</th>
-                        <th>Participants</th>
-                        <th>Charge</th>
+                        <th>Revenue</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -357,10 +412,30 @@ function App() {
                           <td>{event.activity_type}</td>
                           <td>{event.host_details || '-'}</td>
                           <td>{event.event_date}</td>
-                          <td>{event.event_time}</td>
                           <td>{event.venue || '-'}</td>
-                          <td>{event.participants_count || '-'}</td>
-                          <td>{event.per_person_charge ? `₹${event.per_person_charge}` : '-'}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <div className="input-with-prefix" style={{ flex: 1 }}>
+                                <span className="input-prefix">₹</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="100"
+                                  placeholder="0"
+                                  value={revenueInputs[event.id] || ''}
+                                  onChange={(e) => handleRevenueChange(event.id, e.target.value)}
+                                  style={{ width: '100%' }}
+                                />
+                              </div>
+                              <button
+                                className={`btn ${savedRevenue[event.id] ? 'btn-success' : 'btn-primary'}`}
+                                onClick={() => saveRevenue(event.id)}
+                                style={{ padding: '6px 12px', fontSize: '14px', minWidth: '70px' }}
+                              >
+                                {savedRevenue[event.id] ? '✓ Saved' : 'Save'}
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
