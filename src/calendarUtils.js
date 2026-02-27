@@ -21,7 +21,8 @@ export function generateCalendarLink(eventData) {
         'fluid-art': 'Fluid Art Workshop',
         'canvas': 'Canvas Workshop',
         'mosaic': 'Mosaic Workshop',
-        'photo-frame': 'Photo Frame Workshop'
+        'photo-frame': 'Photo Frame Workshop',
+        'tote-bags': 'Tote Bags Workshop'
     }
     const activityName = activityNames[activity_type] || 'Art Workshop'
     const title = host_details
@@ -141,7 +142,8 @@ function generateICSFile(eventData) {
         'fluid-art': 'Fluid Art Workshop',
         'canvas': 'Canvas Workshop',
         'mosaic': 'Mosaic Workshop',
-        'photo-frame': 'Photo Frame Workshop'
+        'photo-frame': 'Photo Frame Workshop',
+        'tote-bags': 'Tote Bags Workshop'
     }
     const activityName = activityNames[activity_type] || 'Art Workshop'
     const title = host_details ? `${activityName} - ${host_details}` : activityName

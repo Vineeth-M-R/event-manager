@@ -15,7 +15,8 @@ const MATERIAL_COSTS = {
   'mosaic-coasters': 625,
   'mosaic-shapes': 350,
   'photo-frame': 300,
-  'no-base': 100
+  'no-base': 100,
+  'tote-bags': 200
 }
 
 function App() {
@@ -312,6 +313,7 @@ function App() {
                   <option value="mosaic-shapes">Mosaic Shapes</option>
                   <option value="photo-frame">Photo Frame</option>
                   <option value="no-base">No Base</option>
+                  <option value="tote-bags">Tote Bags</option>
                 </select>
               </div>
 
