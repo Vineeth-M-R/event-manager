@@ -10,13 +10,14 @@ const MATERIAL_COSTS = {
   'fluid-art': 282,
   'canvas-regular': 150,
   'canvas-kit': 200,
-  'mosaic-article': 490,
-  'mosaic-serving-tray': 835,
-  'mosaic-coasters': 625,
-  'mosaic-shapes': 350,
+  'mosaic-article': 380,
+  'mosaic-serving-tray': 650,
+  'mosaic-coasters': 360,
+  'mosaic-shapes': 275,
   'photo-frame': 300,
   'no-base': 100,
-  'tote-bags': 200
+  'tote-bags': 200,
+  'candle': 230
 }
 
 function App() {
@@ -314,6 +315,7 @@ function App() {
                   <option value="photo-frame">Photo Frame</option>
                   <option value="no-base">No Base</option>
                   <option value="tote-bags">Tote Bags</option>
+                  <option value="candle">Candle</option>
                 </select>
               </div>
 
