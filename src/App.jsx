@@ -39,6 +39,7 @@ function App() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false)
 
   const [totalRevenue, setTotalRevenue] = useState(0)
+  const [totalEvents, setTotalEvents] = useState(0)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showEventDetails, setShowEventDetails] = useState(false)
   const [eventDetailsForm, setEventDetailsForm] = useState({
@@ -73,6 +74,7 @@ function App() {
       }, 0)
 
       setTotalRevenue(total)
+      setTotalEvents((data || []).length)
     } catch (error) {
       console.error('Error fetching total profit:', error)
     }
@@ -285,8 +287,15 @@ function App() {
       <main className="form-card">
         {/* Profit Summary */}
         <div className="revenue-summary">
-          <div className="revenue-label">Total Profit</div>
-          <div className="revenue-amount">₹{totalRevenue.toLocaleString('en-IN')}</div>
+          <div className="summary-item">
+            <div className="revenue-label">Total Profit</div>
+            <div className="revenue-amount">₹{totalRevenue.toLocaleString('en-IN')}</div>
+          </div>
+          <div className="summary-divider"></div>
+          <div className="summary-item">
+            <div className="revenue-label">Events Done</div>
+            <div className="revenue-amount">{totalEvents}</div>
+          </div>
         </div>
 
         <form className="event-form" onSubmit={handleSubmit}>

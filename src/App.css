@@ -108,7 +108,23 @@ body {
   border-radius: 12px;
   padding: 2rem;
   margin-bottom: 2.5rem;
-  text-align: center;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.summary-divider {
+  width: 1px;
+  height: 60px;
+  background: rgba(30, 58, 138, 0.15);
+  margin: 0 1rem;
 }
 
 .revenue-label {
