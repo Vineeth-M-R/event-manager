@@ -17,7 +17,8 @@ const MATERIAL_COSTS = {
   'photo-frame': 300,
   'no-base': 100,
   'tote-bags': 200,
-  'candle': 230
+  'candle': 230,
+  'toy-painting': 200
 }
 
 function App() {
@@ -325,6 +326,7 @@ function App() {
                   <option value="no-base">No Base</option>
                   <option value="tote-bags">Tote Bags</option>
                   <option value="candle">Candle</option>
+                  <option value="toy-painting">Toy Painting</option>
                 </select>
               </div>
 
