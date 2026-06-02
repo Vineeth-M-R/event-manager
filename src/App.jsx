@@ -19,7 +19,8 @@ const MATERIAL_COSTS = {
   'tote-bags': 200,
   'candle': 230,
   'toy-painting': 200,
-  'flower-making': 100
+  'flower-making': 100,
+  'serving-tray': 270
 }
 
 function App() {
@@ -329,6 +330,7 @@ function App() {
                   <option value="candle">Candle</option>
                   <option value="toy-painting">Toy Painting</option>
                   <option value="flower-making">Flower Making</option>
+                  <option value="serving-tray">Serving Tray</option>
                 </select>
               </div>
 
