@@ -127,13 +127,44 @@ body {
   margin: 0 1rem;
 }
 
+.revenue-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
 .revenue-label {
   font-size: 0.75rem;
   color: #6B7280;
   font-weight: 600;
-  margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+}
+
+.eye-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  border-radius: 4px;
+  transition: color 0.2s ease, background 0.2s ease;
+  line-height: 1;
+}
+
+.eye-toggle-btn:hover {
+  color: #1E3A8A;
+  background: rgba(30, 58, 138, 0.08);
+}
+
+.revenue-hidden {
+  filter: blur(6px);
+  user-select: none;
+  transition: filter 0.25s ease;
 }
 
 .revenue-amount {
