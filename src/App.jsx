@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { supabase } from './supabaseClient'
 import { openCalendarLink } from './calendarUtils'
+import MonthlyProfitAnalyticsModal from './MonthlyProfitAnalyticsModal'
 
 // Material costs per activity type
 const MATERIAL_COSTS = {
@@ -50,6 +51,11 @@ function App() {
     participants: '',
     moneyCollected: ''
   })
+
+  // Monthly Analytics State
+  const [showMonthlyAnalytics, setShowMonthlyAnalytics] = useState(false)
+  const [monthlyAnalyticsData, setMonthlyAnalyticsData] = useState([])
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
 
   // Fetch total profit on component mount
   useEffect(() => {
@@ -224,6 +230,65 @@ function App() {
     }
   }
 
+  // Fetch and aggregate monthly profit time series for the entire year (2026)
+  const fetchMonthlyAnalytics = async () => {
+    setIsLoadingAnalytics(true)
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+
+      if (error) throw error
+
+      const monthNames = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ]
+
+      // Initialize all 12 months with 0s
+      const monthlyBreakdown = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        monthName: monthNames[i],
+        revenue: 0,
+        cost: 0,
+        profit: 0,
+        eventCount: 0
+      }))
+
+      ;(data || []).forEach(ev => {
+        if (!ev.event_date) return
+        const parts = ev.event_date.split('/')
+        if (parts.length < 2) return
+
+        const month = parseInt(parts[1], 10)
+        if (month >= 1 && month <= 12) {
+          const monthIdx = month - 1
+          monthlyBreakdown[monthIdx].eventCount += 1
+
+          if (ev.revenue) {
+            const revenue = parseFloat(ev.revenue) || 0
+            const participants = parseInt(ev.participants_count, 10) || 0
+            const unitCost = MATERIAL_COSTS[ev.activity_type] || 0
+            const materialCost = participants * unitCost
+            const profit = revenue - materialCost
+
+            monthlyBreakdown[monthIdx].revenue += revenue
+            monthlyBreakdown[monthIdx].cost += materialCost
+            monthlyBreakdown[monthIdx].profit += profit
+          }
+        }
+      })
+
+      setMonthlyAnalyticsData(monthlyBreakdown)
+      setShowMonthlyAnalytics(true)
+    } catch (error) {
+      console.error('Error calculating monthly profit analytics:', error)
+      alert(`Error loading analytics: ${error.message}`)
+    } finally {
+      setIsLoadingAnalytics(false)
+    }
+  }
+
   const closeResponsesModal = () => {
     setShowResponses(false)
   }
@@ -278,14 +343,30 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1 className="app-title">Welcome Pranathee</h1>
-        <button
-          type="button"
-          className="view-responses-btn"
-          onClick={fetchPreviousEvents}
-          disabled={isLoadingEvents}
-        >
-          {isLoadingEvents ? 'Loading...' : 'View Events'}
-        </button>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="view-responses-btn"
+            onClick={fetchPreviousEvents}
+            disabled={isLoadingEvents}
+          >
+            {isLoadingEvents ? 'Loading...' : 'View Events'}
+          </button>
+          <button
+            type="button"
+            className="analytics-cta-btn"
+            onClick={fetchMonthlyAnalytics}
+            disabled={isLoadingAnalytics}
+            title="View monthly profit time-series analytics"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            {isLoadingAnalytics ? 'Calculating...' : 'Monthly Profit Analytics'}
+          </button>
+        </div>
       </header>
 
       <main className="form-card">
@@ -613,6 +694,14 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Monthly Profit Analytics Modal */}
+      <MonthlyProfitAnalyticsModal
+        isOpen={showMonthlyAnalytics}
+        onClose={() => setShowMonthlyAnalytics(false)}
+        monthlyData={monthlyAnalyticsData}
+        totalAnnualProfit={totalRevenue}
+      />
     </div>
   )
 }
