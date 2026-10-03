@@ -21,7 +21,10 @@ const MATERIAL_COSTS = {
   'candle': 230,
   'toy-painting': 200,
   'flower-making': 100,
-  'serving-tray': 270
+  'serving-tray': 270,
+  'wine-glass': 180,
+  'jelly-bag': 415,
+  'coaster-painting': 140
 }
 
 function App() {
@@ -144,7 +147,7 @@ function App() {
     setSubmitMessage({ type: '', text: '' })
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('events')
         .insert([
           {
@@ -438,6 +441,9 @@ function App() {
                   <option value="toy-painting">Toy Painting</option>
                   <option value="flower-making">Flower Making</option>
                   <option value="serving-tray">Serving Tray</option>
+                  <option value="wine-glass">Wine Glass</option>
+                  <option value="jelly-bag">Jelly Bag</option>
+                  <option value="coaster-painting">Coaster Painting</option>
                 </select>
               </div>
 
