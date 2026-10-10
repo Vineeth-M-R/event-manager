@@ -24,7 +24,24 @@ const MATERIAL_COSTS = {
   'serving-tray': 270,
   'wine-glass': 180,
   'jelly-bag': 415,
-  'coaster-painting': 140
+  'coaster-painting': 140,
+  'tumbler': 475
+}
+
+// Helper to format/normalize event time (defaults to 12:00 PM IST if empty)
+const formatEventTime = (timeStr) => {
+  if (!timeStr || !timeStr.trim()) return '12:00'
+  const str = timeStr.trim().toLowerCase().replace(/\s*ist\s*$/i, '').trim()
+  const match = str.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)
+  if (match) {
+    let hours = parseInt(match[1], 10)
+    const minutes = match[2] ? match[2].padStart(2, '0') : '00'
+    const ampm = match[3] ? match[3].toLowerCase() : null
+    if (ampm === 'pm' && hours < 12) hours += 12
+    if (ampm === 'am' && hours === 12) hours = 0
+    return `${String(hours).padStart(2, '0')}:${minutes}`
+  }
+  return timeStr
 }
 
 function App() {
@@ -132,8 +149,8 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Validate required fields
-    if (!formData.activityType || !dateValue || !formData.time) {
+    // Validate required fields (Time is optional, defaults to 12 pm IST)
+    if (!formData.activityType || !dateValue) {
       setSubmitMessage({ type: 'error', text: 'Please fill in all required fields' })
       return
     }
@@ -146,6 +163,8 @@ function App() {
     setIsSubmitting(true)
     setSubmitMessage({ type: '', text: '' })
 
+    const resolvedTime = formatEventTime(formData.time)
+
     try {
       const { error } = await supabase
         .from('events')
@@ -157,7 +176,7 @@ function App() {
             per_person_charge: formData.perPersonCharge ? parseFloat(formData.perPersonCharge) : null,
             venue: formData.venue,
             event_date: dateValue,
-            event_time: formData.time,
+            event_time: resolvedTime,
             additional_notes: formData.additionalNotes
           }
         ])
@@ -179,7 +198,7 @@ function App() {
         per_person_charge: formData.perPersonCharge,
         venue: formData.venue,
         event_date: dateValue,
-        event_time: formData.time,
+        event_time: resolvedTime,
         additional_notes: formData.additionalNotes
       })
 
@@ -444,6 +463,7 @@ function App() {
                   <option value="wine-glass">Wine Glass</option>
                   <option value="jelly-bag">Jelly Bag</option>
                   <option value="coaster-painting">Coaster Painting</option>
+                  <option value="tumbler">Tumbler</option>
                 </select>
               </div>
 
@@ -480,10 +500,10 @@ function App() {
                 <input
                   id="workshopTime"
                   name="time"
-                  type="time"
+                  type="text"
+                  placeholder="12 pm IST"
                   value={formData.time}
                   onChange={handleInputChange}
-                  required
                 />
               </div>
             </div>

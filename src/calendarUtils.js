@@ -1,4 +1,23 @@
 /**
+ * Parse time string into [hours, minutes] in 24h format (defaults to 12:00 PM IST)
+ */
+function parseTime(timeStr) {
+    if (!timeStr || !timeStr.trim()) return [12, 0]
+    const str = timeStr.trim().toLowerCase().replace(/\s*ist\s*$/i, '').trim()
+    const match = str.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)
+    if (match) {
+        let hours = parseInt(match[1], 10)
+        const minutes = match[2] ? parseInt(match[2], 10) : 0
+        const ampm = match[3] ? match[3].toLowerCase() : null
+        if (ampm === 'pm' && hours < 12) hours += 12
+        if (ampm === 'am' && hours === 12) hours = 0
+        return [hours, minutes]
+    }
+    const parts = timeStr.split(':')
+    return [parseInt(parts[0], 10) || 12, parseInt(parts[1], 10) || 0]
+}
+
+/**
  * Generate Google Calendar deep link from event data
  * @param {Object} eventData - Event details from form
  * @returns {string} - Google Calendar URL
@@ -26,7 +45,8 @@ export function generateCalendarLink(eventData) {
         'candle': 'Candle Workshop',
         'wine-glass': 'Wine Glass Workshop',
         'jelly-bag': 'Jelly Bag Workshop',
-        'coaster-painting': 'Coaster Painting Workshop'
+        'coaster-painting': 'Coaster Painting Workshop',
+        'tumbler': 'Tumbler Workshop'
     }
     const activityName = activityNames[activity_type] || 'Art Workshop'
     const title = host_details
@@ -34,13 +54,13 @@ export function generateCalendarLink(eventData) {
         : activityName
 
     // Format dates (YYYYMMDDTHHMMSSZ format)
-    // Parse DD/MM and time HH:MM
+    // Parse DD/MM and time
     const [day, month] = event_date.split('/')
-    const [hours, minutes] = event_time.split(':')
+    const [hours, minutes] = parseTime(event_time)
 
     // Create date object in IST (UTC+5:30)
     // Note: JavaScript Date months are 0-indexed
-    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), hours, minutes, 0)
 
     // Convert to UTC by subtracting IST offset (5 hours 30 minutes = 330 minutes)
     const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000))
@@ -116,10 +136,10 @@ function generateICSFile(eventData) {
 
     // Parse date and time
     const [day, month] = event_date.split('/')
-    const [hours, minutes] = event_time.split(':')
+    const [hours, minutes] = parseTime(event_time)
 
     // Create date object in IST
-    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+    const istDate = new Date(2026, parseInt(month) - 1, parseInt(day), hours, minutes, 0)
 
     // Convert to UTC
     const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000))
@@ -151,7 +171,8 @@ function generateICSFile(eventData) {
         'candle': 'Candle Workshop',
         'wine-glass': 'Wine Glass Workshop',
         'jelly-bag': 'Jelly Bag Workshop',
-        'coaster-painting': 'Coaster Painting Workshop'
+        'coaster-painting': 'Coaster Painting Workshop',
+        'tumbler': 'Tumbler Workshop'
     }
     const activityName = activityNames[activity_type] || 'Art Workshop'
     const title = host_details ? `${activityName} - ${host_details}` : activityName
