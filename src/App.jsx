@@ -3,6 +3,7 @@ import './App.css'
 import { supabase } from './supabaseClient'
 import { openCalendarLink } from './calendarUtils'
 import MonthlyProfitAnalyticsModal from './MonthlyProfitAnalyticsModal'
+import ChecklistModal from './ChecklistModal'
 
 // Material costs per activity type
 const MATERIAL_COSTS = {
@@ -76,6 +77,8 @@ function App() {
   const [showMonthlyAnalytics, setShowMonthlyAnalytics] = useState(false)
   const [monthlyAnalyticsData, setMonthlyAnalyticsData] = useState([])
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
+  // Checklist State
+  const [showChecklist, setShowChecklist] = useState(false)
 
   // Fetch total profit on component mount
   useEffect(() => {
@@ -388,6 +391,18 @@ function App() {
             </svg>
             {isLoadingAnalytics ? 'Calculating...' : 'Monthly Profit Analytics'}
           </button>
+          <button
+            type="button"
+            className="checklist-cta-btn"
+            onClick={() => setShowChecklist(true)}
+            title="View workshop activity checklist"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            Checklist
+          </button>
         </div>
       </header>
 
@@ -444,7 +459,6 @@ function App() {
                   required
                 >
                   <option value="">Select an activity</option>
-                  <option value="onesie-branded">Onesie Branded</option>
                   <option value="onesie-generic">Onesie Generic</option>
                   <option value="fluid-art">Fluid Art</option>
                   <option value="canvas-regular">Canvas Regular</option>
@@ -727,6 +741,12 @@ function App() {
         onClose={() => setShowMonthlyAnalytics(false)}
         monthlyData={monthlyAnalyticsData}
         totalAnnualProfit={totalRevenue}
+      />
+
+      {/* Workshop Activity Checklist Modal */}
+      <ChecklistModal
+        isOpen={showChecklist}
+        onClose={() => setShowChecklist(false)}
       />
     </div>
   )
