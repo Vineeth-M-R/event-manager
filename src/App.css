@@ -797,9 +797,9 @@ body {
 .checklist-cta-btn {
   padding: 0.65rem 1.25rem;
   font-size: 0.9rem;
-  background: #0D9488;
-  border: 1.5px solid #0D9488;
-  color: #FFFFFF;
+  background: transparent;
+  border: 1.5px solid #1E3A8A;
+  color: #1E3A8A;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
@@ -807,13 +807,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  box-shadow: 0 2px 4px rgba(13, 148, 136, 0.15);
 }
 
 .checklist-cta-btn:hover {
-  background: #0F766E;
-  border-color: #0F766E;
-  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+  background: #1E3A8A;
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
   transform: translateY(-1px);
 }
 
@@ -878,9 +877,9 @@ body {
 
 .checklist-dropdown:focus {
   outline: none;
-  border-color: #0D9488;
+  border-color: #1E3A8A;
   background-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
 }
 
 /* Progress Section */
@@ -947,7 +946,7 @@ body {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0D9488, #10B981);
+  background: linear-gradient(90deg, #1E3A8A, #3B82F6);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -976,17 +975,17 @@ body {
   padding: 0.4rem 0.85rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #0D9488;
-  background: #F0FDFA;
-  border: 1px solid #99F6E4;
+  color: #1E3A8A;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-secondary-sm:hover {
-  background: #CCFBF1;
-  border-color: #5EEAD4;
+  background: #DBEAFE;
+  border-color: #93C5FD;
 }
 
 .checklist-ul {
@@ -1053,12 +1052,12 @@ body {
 }
 
 .checkbox-container:hover input ~ .checkbox-checkmark {
-  border-color: #0D9488;
+  border-color: #1E3A8A;
 }
 
 .checkbox-container input:checked ~ .checkbox-checkmark {
-  background-color: #0D9488;
-  border-color: #0D9488;
+  background-color: #1E3A8A;
+  border-color: #1E3A8A;
 }
 
 .checkbox-checkmark:after {
@@ -1127,12 +1126,12 @@ body {
 
 .checklist-add-input:focus {
   outline: none;
-  border-color: #0D9488;
+  border-color: #1E3A8A;
 }
 
 .checklist-add-btn {
   padding: 0.65rem 1.1rem;
-  background: #0D9488;
+  background: #1E3A8A;
   color: #FFFFFF;
   border: none;
   border-radius: 6px;
@@ -1144,7 +1143,7 @@ body {
 }
 
 .checklist-add-btn:hover:not(:disabled) {
-  background: #0F766E;
+  background: #1E40AF;
 }
 
 .checklist-add-btn:disabled {
@@ -1174,11 +1173,11 @@ body {
 .group-count {
   font-size: 0.72rem;
   font-weight: 600;
-  color: #0D9488;
-  background: #E6FFFA;
+  color: #1E3A8A;
+  background: #EEF2FF;
   padding: 0.1rem 0.45rem;
   border-radius: 999px;
-  border: 1px solid #99F6E4;
+  border: 1px solid #C7D2FE;
 }
 
 @media (max-width: 640px) {
@@ -1188,5 +1187,225 @@ body {
 
   .item-delete-btn {
     opacity: 1;
+  }
+}
+
+/* ===== Inventory CTA Button ===== */
+.inventory-cta-btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  background: transparent;
+  border: 1.5px solid #1E3A8A;
+  color: #1E3A8A;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.inventory-cta-btn:hover {
+  background: #1E3A8A;
+  color: #FFFFFF;
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
+  transform: translateY(-1px);
+}
+
+.inventory-cta-btn:active {
+  transform: translateY(0);
+}
+
+/* ===== Inventory Modal ===== */
+.inventory-modal-content {
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-subtitle {
+  font-size: 0.82rem;
+  color: #6B7280;
+  margin-top: 0.2rem;
+}
+
+.inventory-modal-body {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.inventory-loading,
+.inventory-error {
+  text-align: center;
+  padding: 2rem;
+  color: #6B7280;
+  font-size: 0.9rem;
+}
+
+.inventory-error {
+  color: #DC2626;
+}
+
+.inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inventory-row {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.inventory-row:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.inventory-item-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1F2937;
+}
+
+.inventory-count-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1E3A8A;
+}
+
+/* Add Purchase CTA & Form */
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.add-purchase-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1E3A8A;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.add-purchase-btn:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+}
+
+.add-inventory-card {
+  background: #F9FAFB;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.add-inventory-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.add-inventory-form-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.add-inventory-select {
+  flex: 2;
+  min-width: 140px;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: #FFFFFF;
+  color: #1F2937;
+}
+
+.add-inventory-input-wrapper {
+  flex: 1;
+  min-width: 90px;
+}
+
+.add-inventory-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  background: #FFFFFF;
+  color: #1F2937;
+  box-sizing: border-box;
+}
+
+.add-inventory-input:focus,
+.add-inventory-select:focus {
+  outline: none;
+  border-color: #1E3A8A;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+}
+
+.add-inventory-submit-btn {
+  padding: 0.55rem 1rem;
+  background: #1E3A8A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.add-inventory-submit-btn:hover:not(:disabled) {
+  background: #1E40AF;
+}
+
+.add-inventory-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.purchase-feedback-msg {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #059669;
+  background: #ECFDF5;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #A7F3D0;
+}
+
+.purchase-feedback-msg.error {
+  color: #DC2626;
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+@media (max-width: 640px) {
+  .inventory-modal-body {
+    padding: 1.25rem 1rem;
   }
 }

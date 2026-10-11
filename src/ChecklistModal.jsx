@@ -22,7 +22,8 @@ export default function ChecklistModal({ isOpen, onClose }) {
     return initial;
   });
 
-  const [newItemText, setNewItemText] = useState('');
+
+
 
   // Persist to localStorage whenever checklists state updates
   useEffect(() => {
@@ -59,39 +60,10 @@ export default function ChecklistModal({ isOpen, onClose }) {
     });
   };
 
-  const handleAddItem = (e) => {
-    e.preventDefault();
-    const trimmed = newItemText.trim();
-    if (!trimmed) return;
-
-    const newItem = {
-      id: `${activeActivityId}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      text: trimmed,
-      category: 'Activity Supplies',
-      checked: false
-    };
-
-    setChecklists(prev => ({
-      ...prev,
-      [activeActivityId]: [...(prev[activeActivityId] || []), newItem]
-    }));
-    setNewItemText('');
-  };
-
   const handleDeleteItem = (itemId) => {
     setChecklists(prev => ({
       ...prev,
       [activeActivityId]: (prev[activeActivityId] || []).filter(item => item.id !== itemId)
-    }));
-  };
-
-  const handleUncheckAll = () => {
-    setChecklists(prev => ({
-      ...prev,
-      [activeActivityId]: (prev[activeActivityId] || []).map(item => ({
-        ...item,
-        checked: false
-      }))
     }));
   };
 
@@ -171,18 +143,6 @@ export default function ChecklistModal({ isOpen, onClose }) {
                     : `${completedCount} of ${totalCount} items packed (${progressPercent}%)`
                 )}
               </span>
-              {completedCount > 0 && (
-                <div className="checklist-action-pills">
-                  <button
-                    type="button"
-                    onClick={handleUncheckAll}
-                    className="pill-action-btn"
-                    title="Uncheck all items for a new event"
-                  >
-                    Uncheck All
-                  </button>
-                </div>
-              )}
             </div>
             {totalCount > 0 && (
               <div className="progress-track">

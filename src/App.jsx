@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient'
 import { openCalendarLink } from './calendarUtils'
 import MonthlyProfitAnalyticsModal from './MonthlyProfitAnalyticsModal'
 import ChecklistModal from './ChecklistModal'
+import InventoryModal from './InventoryModal'
 
 // Material costs per activity type
 const MATERIAL_COSTS = {
@@ -52,10 +53,8 @@ function App() {
     activityType: '',
     hostDetails: '',
     participantsCount: '',
-    perPersonCharge: '',
     venue: '',
-    time: '',
-    additionalNotes: ''
+    time: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' })
@@ -79,6 +78,8 @@ function App() {
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false)
   // Checklist State
   const [showChecklist, setShowChecklist] = useState(false)
+  // Inventory State
+  const [showInventory, setShowInventory] = useState(false)
 
   // Fetch total profit on component mount
   useEffect(() => {
@@ -176,11 +177,9 @@ function App() {
             activity_type: formData.activityType,
             host_details: formData.hostDetails,
             participants_count: formData.participantsCount ? parseInt(formData.participantsCount) : null,
-            per_person_charge: formData.perPersonCharge ? parseFloat(formData.perPersonCharge) : null,
             venue: formData.venue,
             event_date: dateValue,
-            event_time: resolvedTime,
-            additional_notes: formData.additionalNotes
+            event_time: resolvedTime
           }
         ])
 
@@ -198,11 +197,9 @@ function App() {
         activity_type: formData.activityType,
         host_details: formData.hostDetails,
         participants_count: formData.participantsCount,
-        per_person_charge: formData.perPersonCharge,
         venue: formData.venue,
         event_date: dateValue,
-        event_time: resolvedTime,
-        additional_notes: formData.additionalNotes
+        event_time: resolvedTime
       })
 
       // Reset form
@@ -210,10 +207,8 @@ function App() {
         activityType: '',
         hostDetails: '',
         participantsCount: '',
-        perPersonCharge: '',
         venue: '',
-        time: '',
-        additionalNotes: ''
+        time: ''
       })
       setDateValue('')
 
@@ -403,6 +398,19 @@ function App() {
             </svg>
             Checklist
           </button>
+          <button
+            type="button"
+            className="inventory-cta-btn"
+            onClick={() => setShowInventory(true)}
+            title="View current inventory"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            Inventory
+          </button>
         </div>
       </header>
 
@@ -571,21 +579,6 @@ function App() {
             </div>
           </div>
 
-          {/* Notes Section */}
-          <div className="form-section">
-            <div className="form-field">
-              <label htmlFor="workshopNotes">Additional notes</label>
-              <textarea
-                id="workshopNotes"
-                name="additionalNotes"
-                rows="3"
-                placeholder="Add any additional details"
-                value={formData.additionalNotes}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : 'Add to calendar'}
@@ -747,6 +740,12 @@ function App() {
       <ChecklistModal
         isOpen={showChecklist}
         onClose={() => setShowChecklist(false)}
+      />
+
+      {/* Inventory Modal */}
+      <InventoryModal
+        isOpen={showInventory}
+        onClose={() => setShowInventory(false)}
       />
     </div>
   )

@@ -48,7 +48,10 @@ export default function MonthlyProfitAnalyticsModal({ isOpen, onClose, monthlyDa
     return { val: Math.round(val), y };
   });
 
-  const bestMonth = [...monthlyData].sort((a, b) => b.profit - a.profit)[0];
+  const activeMonths = monthlyData.filter(m => m.eventCount > 0).length || 1;
+  const totalRevenue = monthlyData.reduce((sum, m) => sum + m.revenue, 0);
+  const avgRevenuePerMonth = totalRevenue / activeMonths;
+  const avgProfitPerMonth = (totalAnnualProfit || 0) / activeMonths;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -65,20 +68,16 @@ export default function MonthlyProfitAnalyticsModal({ isOpen, onClose, monthlyDa
           {/* Key Metric Highlights */}
           <div className="analytics-metrics-grid">
             <div className="analytics-metric-card">
-              <span className="metric-label">Annual Profit</span>
+              <span className="metric-label">Total Profit</span>
               <span className="metric-value">₹{(totalAnnualProfit || 0).toLocaleString('en-IN')}</span>
             </div>
             <div className="analytics-metric-card">
-              <span className="metric-label">Best Month</span>
-              <span className="metric-value">
-                {bestMonth && bestMonth.profit > 0 ? `${bestMonth.monthName} (₹${bestMonth.profit.toLocaleString('en-IN')})` : 'N/A'}
-              </span>
+              <span className="metric-label">Avg Revenue / Month</span>
+              <span className="metric-value">₹{Math.round(avgRevenuePerMonth).toLocaleString('en-IN')}</span>
             </div>
             <div className="analytics-metric-card">
-              <span className="metric-label">Active Event Months</span>
-              <span className="metric-value">
-                {monthlyData.filter(m => m.profit > 0 || m.eventCount > 0).length} / 12
-              </span>
+              <span className="metric-label">Avg Profit / Month</span>
+              <span className="metric-value">₹{Math.round(avgProfitPerMonth).toLocaleString('en-IN')}</span>
             </div>
           </div>
 
