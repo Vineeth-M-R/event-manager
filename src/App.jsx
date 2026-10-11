@@ -52,9 +52,9 @@ function App() {
   const [formData, setFormData] = useState({
     activityType: '',
     hostDetails: '',
-    participantsCount: '',
     venue: '',
-    time: ''
+    time: '',
+    perPersonCharge: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' })
@@ -176,7 +176,6 @@ function App() {
           {
             activity_type: formData.activityType,
             host_details: formData.hostDetails,
-            participants_count: formData.participantsCount ? parseInt(formData.participantsCount) : null,
             venue: formData.venue,
             event_date: dateValue,
             event_time: resolvedTime
@@ -196,19 +195,19 @@ function App() {
       openCalendarLink({
         activity_type: formData.activityType,
         host_details: formData.hostDetails,
-        participants_count: formData.participantsCount,
         venue: formData.venue,
         event_date: dateValue,
-        event_time: resolvedTime
+        event_time: resolvedTime,
+        per_person_charge: formData.perPersonCharge
       })
 
       // Reset form
       setFormData({
         activityType: '',
         hostDetails: '',
-        participantsCount: '',
         venue: '',
-        time: ''
+        time: '',
+        perPersonCharge: ''
       })
       setDateValue('')
 
@@ -543,23 +542,9 @@ function App() {
             </div>
           </div>
 
-          {/* Participants & Pricing Section */}
+          {/* Pricing Section */}
           <div className="form-section">
             <div className="form-row">
-              <div className="form-field">
-                <label htmlFor="participantsCount">Number of participants</label>
-                <input
-                  id="participantsCount"
-                  name="participantsCount"
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="e.g. 20"
-                  value={formData.participantsCount}
-                  onChange={handleInputChange}
-                />
-              </div>
-
               <div className="form-field">
                 <label htmlFor="perPersonCharge">Per person charge</label>
                 <div className="input-with-prefix">
